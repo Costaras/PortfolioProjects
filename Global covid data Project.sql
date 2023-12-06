@@ -1,24 +1,35 @@
 SELECT *
 FROM [Portfolio Project]..CovidVaccinations
-ORDER by 3, 4
+  ORDER by 3, 4
 
 SELECT * 
 FROM [Portfolio Project]..CovidVaccinations
-ORDER BY 3, 4
+  ORDER BY 3, 4
 
 -- Total Cases vs Total Deaths
 -- Shows the likelyhood of death after contracting COVID-19 depending on the location and date
 
-SELECT location, date, total_cases, total_deaths, ROUND((CONVERT(float,total_deaths)/CONVERT(float,total_cases))*100, 6) AS DeathsPer100Cases
+SELECT 
+  location, 
+  date, 
+  total_cases, 
+  total_deaths, 
+  ROUND((CONVERT(float,total_deaths)/CONVERT(float,total_cases))*100, 6) AS DeathsPer100Cases
 FROM [Portfolio Project]..CovidDeaths
-ORDER BY 1, 2
+  WHERE location = 'Greece'
+  ORDER BY 1, 2
 
 -- Total Cases vs Population
 -- Shows what percentage of the population got infected
 
-SELECT location, date, total_cases, population, ROUND((CONVERT(float,total_cases)/CONVERT(float, population))*100,6) AS PopInfectedPercent
+SELECT 
+  location, 
+  date, 
+  total_cases, 
+  population, 
+  ROUND((CONVERT(float,total_cases)/CONVERT(float, population))*100,6) AS PopInfectedPercent
 FROM [Portfolio Project]..CovidDeaths
-ORDER BY 1, 2
+  ORDER BY 1, 2
 
 -- Highest infection ratios --
 -- Ranks the countries with the top infection ratios in descending order.

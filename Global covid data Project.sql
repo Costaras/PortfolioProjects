@@ -1,7 +1,10 @@
 SELECT *
 FROM [Portfolio Project]..CovidVaccinations
-WHERE location = 'Austria'
-ORDER by 3,4
+ORDER by 3, 4
+
+SELECT * 
+FROM [Portfolio Project]..CovidVaccinations
+ORDER BY 3, 4
 
 -- Total Cases vs Total Deaths
 -- Shows the likelyhood of death after contracting COVID-19 depending on the location and date
@@ -17,9 +20,8 @@ SELECT location, date, total_cases, population, ROUND((CONVERT(float,total_cases
 FROM [Portfolio Project]..CovidDeaths
 ORDER BY 1, 2
 
---Highest infection ratios
--- MaxCasesCTE ranks the total cases in descending order for each location.
--- Then the select subquery gets the highest total cases for each location which allows the table to show the date the MaxInfectedPercent occured.
+-- Highest infection ratios --
+-- Ranks the countries with the top infection ratios in descending order.
 
 WITH MaxCasesCTE AS (
   SELECT
@@ -44,8 +46,8 @@ WHERE
 ORDER BY
   5 DESC;
 
--- Highest DeathCount/Population ratio per country
--- The worldwide DeathRate ranking of each country is also displayed. Country or continent of interest can also be filtered
+-- Highest DeathCount/Population ratio per country --
+-- The worldwide DeathRate ranking of each country is also displayed. 
 
 WITH MaxDeathsCTE AS (
   SELECT 
@@ -62,9 +64,9 @@ SELECT
   location,
   total_deaths AS TotalDeaths,
   population,
-  ROUND((CONVERT(float, total_deaths) / population) * 100, 6) AS DeathRate,
+  ROUND((CONVERT(float, total_deaths) / population) * 100, 3) AS DeathPerPopulation,
   date,
-  RANK() OVER (ORDER BY ROUND((CONVERT(float, total_deaths) / population) * 100, 6) DESC) AS RANKING
+  RANK() OVER (ORDER BY (CONVERT(float, total_deaths) / population) * 100 DESC) AS RANKING
 FROM
   MaxDeathsCTE
   WHERE 
@@ -74,14 +76,14 @@ SELECT
   DR.location,
   DR.TotalDeaths,
   DR.population,
-  DR.DeathRate,
+  DR.DeathPerPopulation,
   DR.Ranking
 FROM
   DeathRankingCTE DR
-WHERE						-- Where statement can be used optionally when looking for a specific country
+WHERE -- Where statement can be used optionally when looking for a specific country
   DR.location = 'United States' OR location = 'Canada'; 
 
--- Continent Total Deathcount 
+-- Continent Total Deathcount --
 
 SELECT
   RANK () OVER (ORDER BY SUM(CONVERT(float, new_deaths)) DESC) AS RANKING,
@@ -92,7 +94,7 @@ FROM [Portfolio Project]..CovidDeaths
   GROUP BY continent
   ORDER BY TotalDeathcount DESC
 
--- WorldCases, Deaths and Deathrate on each date
+-- WorldCases, Deaths and Deathrate on each date --
 
 SELECT 
   CAST(date AS date) AS Date,
@@ -104,7 +106,31 @@ FROM [Portfolio Project]..CovidDeaths
   GROUP BY CAST(date AS DATE)
   ORDER BY Date
 
--- Total Population vs Vaccinations (w/ Rolling Vaccination Sum)
+	-- Rolling WorldCases and WorldDeath counts can be added using a CTE. As well as the DeathRate up to the date stated.
+
+	WITH GlobalCandD AS (
+	SELECT 
+	  CAST(date AS date) AS Date,
+	  SUM(new_cases) AS WorldCases,
+	  SUM(CONVERT(float, new_deaths)) AS WorldDeaths,
+	  ROUND(SUM(CONVERT(float, new_deaths))/NULLIF(SUM(CONVERT(float, new_cases)), 0) * 100, 3) AS DeathsPer100Cases
+	FROM [Portfolio Project]..CovidDeaths
+	  WHERE continent IS NOT NULL
+	  GROUP BY CAST(date AS DATE)
+	),
+	TotalGlobalCandD AS (
+	SELECT 
+	  Date,
+	  SUM(WorldCases) OVER (ORDER BY Date) AS TotalGlobalCases, 
+	  SUM(WorldDeaths) OVER (ORDER BY Date) AS TotalGlobalDeaths
+	FROM GlobalCandD
+	)
+	SELECT *,
+	  (TotalGlobalDeaths/NULLIF(TotalGlobalCases, 0))*100 AS CurrentDeathRate
+	FROM TotalGlobalCandD
+	  ORDER BY Date
+
+-- Total Population vs Vaccinations (w/ Rolling Vaccination Sum) --
 
 WITH RollingVaccinationSumCTE AS (
 SELECT 
@@ -125,7 +151,7 @@ FROM RollingVaccinationSumCTE AS RLV
   WHERE RollingVaccinationSum IS NOT NULL
   ORDER BY 2, 3
 
--- Temp table created to make the use of multiple select subqueries at different times more convinient
+-- Temp table created to make the use of subsequent select subqueries more convinient
 
 DROP TABLE IF EXISTS #PercentPopulationVaccinated
 CREATE TABLE #PercentPopulationVaccinated (
@@ -165,7 +191,7 @@ FROM #PercentPopulationVaccinated
   WHERE Location = 'Canada' 
 ORDER BY 2,3
 
--- View created for later visualisation
+-- Creating Views for later visualisation -- 
 
 CREATE VIEW PercentPopulationVaccinated AS
   SELECT
@@ -179,4 +205,67 @@ CREATE VIEW PercentPopulationVaccinated AS
     JOIN [Portfolio Project]..CovidVaccinations vac
   	  ON dth.location = vac.location
 	  AND dth.date = vac.date
-    WHERE dth.continent IS NOT NULL 
+    WHERE dth.continent IS NOT NULL
+
+CREATE VIEW GlobalCovidCasualties AS
+	WITH GlobalCandD AS (
+	SELECT 
+	  CAST(date AS date) AS Date,
+	  SUM(new_cases) AS WorldCases,
+	  SUM(CONVERT(float, new_deaths)) AS WorldDeaths,
+	  ROUND(SUM(CONVERT(float, new_deaths))/NULLIF(SUM(CONVERT(float, new_cases)), 0) * 100, 3) AS DeathsPer100Cases
+	FROM [Portfolio Project]..CovidDeaths
+	  WHERE continent IS NOT NULL
+	  GROUP BY CAST(date AS DATE)
+	),
+	TotalGlobalCandD AS (
+	SELECT 
+	  Date,
+	  SUM(WorldCases) OVER (ORDER BY Date) AS TotalGlobalCases, 
+	  SUM(WorldDeaths) OVER (ORDER BY Date) AS TotalGlobalDeaths
+	FROM GlobalCandD
+	)
+	SELECT *,
+	  (TotalGlobalDeaths/NULLIF(TotalGlobalCases, 0))*100 AS CurrentDeathRate
+	FROM TotalGlobalCandD
+
+CREATE VIEW ContinentCovidCasualties AS
+SELECT
+  continent,
+  SUM(CONVERT(float,new_deaths)) AS TotalDeathcount
+FROM [Portfolio Project]..CovidDeaths
+  WHERE continent IS NOT NULL
+  GROUP BY continent
+
+CREATE VIEW DeathPerPopulation AS
+WITH MaxDeathsCTE AS (
+  SELECT 
+	location,
+	date,
+	total_deaths,
+	population,
+    ROW_NUMBER() OVER (PARTITION BY location ORDER BY CONVERT(float,total_deaths) DESC) AS RowNum
+  FROM 
+	[Portfolio Project]..CovidDeaths
+),
+DeathRankingCTE AS(
+SELECT 
+  location,
+  total_deaths AS TotalDeaths,
+  population,
+  ROUND((CONVERT(float, total_deaths) / population) * 100, 3) AS DeathPerPopulation,
+  date,
+  RANK() OVER (ORDER BY (CONVERT(float, total_deaths) / population) * 100 DESC) AS RANKING
+FROM
+  MaxDeathsCTE
+  WHERE 
+  RowNum = 1
+)
+SELECT
+  DR.location,
+  DR.TotalDeaths,
+  DR.population,
+  DR.DeathPerPopulation,
+  DR.Ranking
+FROM
+  DeathRankingCTE DR

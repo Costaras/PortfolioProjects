@@ -127,12 +127,12 @@ WITH
 	SELECT 
 		*,
 		ROW_NUMBER() OVER (PARTITION BY	ParcelID,
-										FullPropertyAddress,
-										SalePrice,
-										LegalReference,
-										OwnerName,
-										SaleDate
-										ORDER BY UniqueID) AS NumberOfDuplicates
+							FullPropertyAddress,
+							SalePrice,
+							LegalReference,
+							OwnerName,
+							SaleDate
+							ORDER BY UniqueID) AS NumberOfDuplicates
 	FROM [Portfolio Project]..NashvilleHousing
 	)
 SELECT *

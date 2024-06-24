@@ -1,0 +1,66 @@
+-- Inspecting the table for missing, null or invalid values 
+SELECT TOP (1000) [Id]
+      ,[SleepDay]
+      ,[TotalSleepRecords]
+      ,[TotalMinutesAsleep]
+      ,[TotalTimeInBed]
+FROM [Portfolio Projects].[dbo].[sleepDay_merged_Apr_May]
+
+-- Converting data types from nvarchar(max) to reduce future errors and increase performace  
+
+ALTER TABLE dbo.sleepDay_merged_Apr_May
+ALTER COLUMN Id BIGINT;
+ALTER TABLE dbo.sleepDay_merged_Apr_May
+ALTER COLUMN SleepDay DATETIME;
+ALTER TABLE dbo.sleepDay_merged_Apr_May
+ALTER COLUMN TotalSleepRecords INT;
+ALTER TABLE dbo.sleepDay_merged_Apr_May
+ALTER COLUMN TotalMinutesAsleep INT;
+ALTER TABLE dbo.sleepDay_merged_Apr_May
+ALTER COLUMN TotalTimeInBed INT;
+
+-- Tables dbo.weightLogInfo_merged_Apr_May and dbo.weightLogInfo_merged_Mar_Apr 
+-- had column LogId which due to its scientific format caused issues.
+
+SELECT TOP (1000) [Id]
+      ,[Date]
+      ,[WeightKg]
+      ,[WeightPounds]
+      ,[Fat]
+      ,[BMI]
+      ,[IsManualReport]
+      ,[LogId]
+  FROM [Portfolio Projects].[dbo].[weightLogInfo_merged_Mar_Apr]
+
+ALTER TABLE dbo.weightLogInfo_merged_Mar_Apr
+ALTER COLUMN LogId BIGINT;
+
+-- Checking for non-numerics and NULLS
+SELECT *
+FROM dbo.weightLogInfo_merged_Apr_May
+WHERE ISNUMERIC(LogId) = 0;
+
+SELECT *
+FROM dbo.weightLogInfo_merged_Apr_May
+WHERE TRY_CAST(LogId AS BIGINT) IS NULL;
+
+-- Adding a new LogId_New to populate with the transformed LogID since the original column could not be converted
+ALTER TABLE dbo.weightLogInfo_merged_Apr_May
+ADD LogId_New BIGINT;
+
+-- Updating LogId_New by casting LogId to FLOAT first, then to BIGINT (WORKED)
+UPDATE dbo.weightLogInfo_merged_Apr_May
+SET LogId_New = CAST(CAST(LogId AS FLOAT) AS BIGINT);
+
+-- Selecting top 1000 records to check the transformation
+SELECT TOP 1000 Id, LogId, LogId_New
+FROM dbo.weightLogInfo_merged_Apr_May;
+
+-- Since it would not have any effect on the analysis, it was decided that the extra zeros were redundant.
+-- So LogId_New was kept as is with 5 less zeroes than the original.
+
+-- Turned LogId_New into the new LogId
+ALTER TABLE dbo.weightLogInfo_merged_Apr_May
+DROP COLUMN LogId;
+EXEC sp_rename 'dbo.weightLogInfo_merged_Apr_May.LogId_New', 'LogId', 'COLUMN';
+[dbo].[weightLogInfo_merged_Mar_Apr]

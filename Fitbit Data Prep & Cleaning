@@ -1,3 +1,4 @@
+-- Inspecting tables for nulls, missing values and invalid values
 SELECT TOP (1000) [Id]
       ,[SleepDay]
       ,[TotalSleepRecords]

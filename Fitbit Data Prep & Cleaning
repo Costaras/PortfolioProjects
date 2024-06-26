@@ -1,3 +1,7 @@
+------------------------------------------------------------------------------------------------------------------------------
+
+--PREPARATION PROCESS--
+
 -- Inspecting tables for nulls, missing values and invalid values
 SELECT TOP (1000) [Id]
       ,[SleepDay]
@@ -64,3 +68,53 @@ ALTER TABLE dbo.weightLogInfo_merged_Apr_May
 DROP COLUMN LogId;
 EXEC sp_rename 'dbo.weightLogInfo_merged_Apr_May.LogId_New', 'LogId', 'COLUMN';
 [dbo].[weightLogInfo_merged_Mar_Apr]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+--CLEANING PROCESS--
+
+-- Checking for unwanted NULL values in the table
+
+DECLARE @tableName NVARCHAR(128) = 'Testing_Table';  -- Insert table name to be checked
+DECLARE @schemaName NVARCHAR(128) = 'dbo';
+DECLARE @nullCheckStatement NVARCHAR(MAX);
+
+-- Generate the NULL check statement
+SELECT @nullCheckStatement = STRING_AGG(COLUMN_NAME + ' IS NULL', ' OR ')
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = @schemaName AND TABLE_NAME = @tableName;
+
+-- Print the NULL check statement to see how it looks
+PRINT 'Generated NULL Check Statement:';
+PRINT @nullCheckStatement;
+
+-- Generate the final query
+DECLARE @sql NVARCHAR(MAX) = 'SELECT * FROM ' + @schemaName + '.' + @tableName + ' WHERE ' + @nullCheckStatement;
+
+-- Print the final query for debugging purposes
+PRINT 'Generated SQL Query:';
+PRINT @sql;
+
+-- Execute the final query and display the results
+EXEC sp_executesql @sql;
+
+-- Table with NULL values created to test the script
+
+CREATE TABLE Testing_Table (
+	FakeID INT
+	,FakeDate DATE
+	,Fakenumber float
+	,Fakeword nvarchar(50)
+	)
+
+INSERT INTO Testing_Table
+VALUES
+(1, '2020-02-15', 35.5, 'GIAGIA'),
+(NULL, '2020-02-16', 35.6, 'GIAGI'),
+(3, NULL, 35.7, 'GIAG'),
+(4, '2020-02-18', NULL, 'GIA'),
+(5, '2020-02-19', 35.8, NULL);
+
+-- Testing_table gave all 4 rows that had NULL values in them 
+
+-- Removing unwanted NULL values from tables (if needed)

@@ -117,4 +117,4 @@ VALUES
 
 -- Testing_table gave all 4 rows that had NULL values in them 
 
--- Removing unwanted NULL values from tables (if needed)
+-- No NULL values were found

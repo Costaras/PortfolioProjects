@@ -118,3 +118,126 @@ VALUES
 -- Testing_table gave all 4 rows that had NULL values in them 
 
 -- No NULL values were found
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Creating stored procedures to FIND and DELETE duplicate rows --
+
+-- Stored procedure that FINDS and DISPLAYS duplicates for inspection
+
+CREATE PROCEDURE FindDuplicates
+	@tableName NVARCHAR(128)
+AS
+BEGIN
+	DECLARE @sql NVARCHAR(MAX);
+	DECLARE @columns NVARCHAR(MAX);
+	DECLARE @schema NVARCHAR(128);
+    DECLARE @table NVARCHAR(128);
+
+	-- Parse schema and table names
+
+	SET @table = PARSENAME(@tableName, 1);
+	SET @schema = PARSENAME(@tableName, 2);
+	
+    --Getting the list of columns in the specified table
+	SELECT 
+		@columns = STRING_AGG(COLUMN_NAME, ', ') WITHIN GROUP(ORDER BY ORDINAL_POSITION)
+	FROM 
+		INFORMATION_SCHEMA.COLUMNS
+	WHERE 
+		TABLE_NAME = @table
+		AND TABLE_SCHEMA = @schema;
+
+	-- Query that uses a CTE to label duplicate rows, then SELECTS all labeled duplicates
+		SET @sql = N'
+	;WITH dup_CTE AS(
+		SELECT 
+			ROW_NUMBER() OVER (PARTITION BY ' + @columns + ' ORDER BY (SELECT NULL)) AS Row_num, 
+			*
+		FROM
+			' + QUOTENAME(@schema) + '.' + QUOTENAME(@table) + '  
+	)
+	-- Select duplicate rows to review
+	SELECT
+		*
+	FROM 
+		dup_CTE
+	WHERE 
+		Row_num > 1;
+	';
+
+	-- 	Print the dynamic SQL for debugging
+	print @sql;
+
+	-- Execute the dynamic SQL query
+	EXEC sp_executesql @sql;
+END;
+
+-- Stored procedure that FINDS and DELETES duplicates, (meant to be used after FindDuplicates)
+
+CREATE PROCEDURE DeleteDuplicates
+	@tableName NVARCHAR(128)
+AS
+BEGIN
+	DECLARE @sql NVARCHAR(MAX);
+	DECLARE @columns NVARCHAR(MAX);
+	DECLARE @schema NVARCHAR(128);
+    DECLARE @table NVARCHAR(128);
+
+	-- Parse schema and table names
+
+	SET @table = PARSENAME(@tableName, 1);
+	SET @schema = PARSENAME(@tableName, 2);
+	
+    --Getting the list of columns in the specified table
+	SELECT 
+		@columns = STRING_AGG(COLUMN_NAME, ', ') WITHIN GROUP(ORDER BY ORDINAL_POSITION)
+	FROM 
+		INFORMATION_SCHEMA.COLUMNS
+	WHERE 
+		TABLE_NAME = @table
+		AND TABLE_SCHEMA = @schema;
+
+	-- Query that uses a CTE to label duplicate rows, then DELETES all labeled duplicates
+		SET @sql = N'
+	;WITH dup_CTE AS(
+		SELECT 
+			ROW_NUMBER() OVER (PARTITION BY ' + @columns + ' ORDER BY (SELECT NULL)) AS Row_num,
+			*
+		FROM
+			' + QUOTENAME(@schema) + '.' + QUOTENAME(@table) + '  
+	)
+	-- Delete duplicate rows to review
+	DELETE 
+	FROM
+		' + QUOTENAME(@schema) + '.' + QUOTENAME(@table) + '
+	WHERE (' + @columns + ') IN (
+		SELECT 
+			' + @columns + '
+		FROM
+			dup_CTE
+		WHERE
+			Row_num > 1
+		);
+	';
+
+	-- 	Print the dynamic SQL for debugging
+	print @sql;
+
+	-- Execute the dynamic SQL query
+	EXEC sp_executesql @sql;
+END;
+
+/*
+    Execute to:
+    1. FIND and INSPECT the duplicates
+    2. DELETE duplicates AFTER VERIFYING they are indeed redundant duplicates
+
+    Remember to back up tables before altering them.
+*/
+
+-- Find and inspect duplicates in the specified table
+EXEC FindDuplicates '[Daily_Tables].[dailyActivity_merged_Apr_May]';
+
+-- Delete duplicates after verification
+EXEC DeleteDuplicates '[Daily_Tables].[dailyActivity_merged_Apr_May]';

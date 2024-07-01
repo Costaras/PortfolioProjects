@@ -48,3 +48,5 @@ HAVING
 	COUNT(Id) > 5
 ORDER BY 
 	TrimmedMeanTotalHoursAsleep
+
+-- Only 16 out of 33 users track their sleep consistently, 7 have tried it and stopped. 

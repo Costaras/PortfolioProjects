@@ -1,0 +1,50 @@
+-- Tracking the sleep of the users -- 
+
+SELECT
+	*
+FROM 
+	[Daily_Tables].[sleepDay_merged_Apr_May]
+
+-- Inspecting the data to see how to find any patterns, or inconsistencies
+SELECT 
+	DISTINCT Id
+    ,CAST(SleepDay AS DATE) AS SleepDate
+    ,ROUND(CAST(TotalMinutesAsleep / 60.0 AS FLOAT), 1) AS TotalHoursAsleep
+    ,ROUND(CAST(TotalTimeInBed / 60.0 AS FLOAT), 1) AS TotalHoursInBed
+FROM 
+	[Daily_Tables].[sleepDay_merged_Apr_May]
+ORDER BY 
+	Id
+	,TotalHoursAsleep
+	ASC;
+
+/* After inspection of the data it was found that sleep hours were varying but mostly consistent.
+However there are some outliers that would affect the process, this code will filter them out */
+
+-- The code below gives a list of the average time of sleep from users that consistently used the sleep tracking functionality --
+
+-- This CTE is ranking the hours of sleep in percentages and counts the number of rows for each Id
+WITH RankedSleepData AS (
+    SELECT 
+        Id
+        ,TotalMinutesAsleep / 60.0 AS TotalHoursAsleep
+		,TotalTimeInBed / 60.0 AS TotalHoursInBed
+		,PERCENT_RANK() OVER (ORDER BY TotalMinutesAsleep / 60.0) AS PercentRank
+    FROM 
+        [Daily_Tables].[sleepDay_merged_Apr_May]
+)
+SELECT 
+	Id
+    ,ROUND(CAST(AVG(TotalHoursAsleep) AS FLOAT),1) AS TrimmedMeanTotalHoursAsleep
+	,ROUND(CAST(AVG(TotalHoursInBed) AS FLOAT),1) AS TrimmedMeanTotalHoursInBed
+	,COUNT(Id) AS NoOfRecords
+FROM 
+    RankedSleepData
+WHERE 
+    PercentRank BETWEEN 0.005 AND 0.995  -- Exclude the top and bottom 0.5%
+GROUP BY 
+	Id
+HAVING
+	COUNT(Id) > 5
+ORDER BY 
+	TrimmedMeanTotalHoursAsleep

@@ -84,7 +84,7 @@ JOIN HtoDCTE ON
     daily.Id = HtoDCTE.Id
 WHERE
     daily.ActivityDay = HtoDCTE.ActivityDateCTE
-    AND (daily.Calories > HtoDCTE.ConvertedCalories + 300 OR daily.Calories < HtoDCTE.ConvertedCalories - 300) -- OPTIONAL: Filter to see outliers
+    AND (daily.Calories > HtoDCTE.ConvertedCalories + 300 OR daily.Calories < HtoDCTE.ConvertedCalories - 300) -- OPTIONAL: Filter to see outliers OR use AND NOT to filter them OUT
 
 -- Result: Daily and Hourly Data Comparison
 -- The comparison shows that the daily and hourly tables represent the same data.

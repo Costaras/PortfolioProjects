@@ -19,7 +19,7 @@ ORDER BY
 	ASC;
 
 /* After inspection of the data it was found that sleep hours were varying but mostly consistent.
-However there are some outliers that would affect the process, this code will filter them out */
+However, outliers from misuse of the sleep monitoring functionality or extreme cases were discovered. The results will be filtered below */
 
 -- The code below gives a list of the average time of sleep from users that consistently used the sleep tracking functionality --
 
@@ -29,7 +29,7 @@ WITH RankedSleepData AS (
         Id
         ,TotalMinutesAsleep / 60.0 AS TotalHoursAsleep
 		,TotalTimeInBed / 60.0 AS TotalHoursInBed
-		,PERCENT_RANK() OVER (ORDER BY TotalMinutesAsleep / 60.0) AS PercentRank
+		,PERCENT_RANK() OVER (ORDER BY TotalMinutesAsleep / 60.0) AS PercentRank -- Replicating the TRIMMEAN functionality usin percent rank
     FROM 
         [Daily_Tables].[sleepDay_merged_Apr_May]
 )
@@ -50,3 +50,47 @@ ORDER BY
 	TrimmedMeanTotalHoursAsleep
 
 -- Only 16 out of 33 users track their sleep consistently, 7 have tried it and stopped. 
+
+/* ////////////////////////////////////////////////////////////////////////////////////////////// */
+
+-- Tracking Daily Calories of Users --
+
+-- This section aims to examine if the daily and hourly tables represent the same data.
+-- We will convert the hourly data to daily data and compare it with the existing daily data.
+
+-- CTE to Convert Hourly Data to Daily Data
+WITH HtoDCTE AS (
+    SELECT
+        Id,
+        CAST(ActivityHour AS DATE) AS ActivityDateCTE,
+        SUM(Calories) AS ConvertedCalories
+    FROM 
+        [Portfolio Projects].[Hourly_Tables].[hourlyCalories_merged_Apr_May]
+    GROUP BY
+        Id,
+        CAST(ActivityHour AS DATE)
+)
+
+-- Join the Daily Table and the Converted Hourly Data to Identify Differences
+SELECT 
+    daily.Id,
+    daily.ActivityDay,
+    HtoDCTE.ActivityDateCTE,
+    daily.Calories,
+    HtoDCTE.ConvertedCalories
+FROM 
+    [Daily_Tables].[dailyCalories_merged_Apr_May] AS daily
+JOIN HtoDCTE ON
+    daily.Id = HtoDCTE.Id
+WHERE
+    daily.ActivityDay = HtoDCTE.ActivityDateCTE
+    AND (daily.Calories > HtoDCTE.ConvertedCalories + 300 OR daily.Calories < HtoDCTE.ConvertedCalories - 300) -- OPTIONAL: Filter to see outliers
+
+-- Result: Daily and Hourly Data Comparison
+-- The comparison shows that the daily and hourly tables represent the same data.
+-- The hourly table is updated more frequently and has more consistent values.
+-- Therefore, the converted hourly data (HtoDCTE) will be used instead of the daily table for further analysis.
+
+-- Conclusion:
+-- The hourly table provides more granular and accurate data.
+-- For future analyses, we will rely on the hourly table converted to daily data as shown in HtoDCTE.

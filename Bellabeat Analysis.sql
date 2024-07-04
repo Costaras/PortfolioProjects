@@ -24,7 +24,7 @@ SELECT
     daily.Calories,
     HtoDCTE.ConvertedCalories
 FROM 
-    [Daily_Tables].[dailyCalories_merged_Apr_May] AS daily
+    [Portfolio Projects].[Daily_Tables].[dailyCalories_merged_Apr_May] AS daily
 JOIN HtoDCTE ON
     daily.Id = HtoDCTE.Id
 WHERE
@@ -52,7 +52,7 @@ WHERE
 SELECT
 	*
 FROM 
-	[Daily_Tables].[sleepDay_merged_Apr_May]
+	[Portfolio Projects].[Daily_Tables].[sleepDay_merged_Apr_May]
 
 -- Inspecting the data to see how to find any patterns, or inconsistencies
 SELECT 
@@ -61,7 +61,7 @@ SELECT
     ,ROUND(CAST(TotalMinutesAsleep / 60.0 AS FLOAT), 1) AS TotalHoursAsleep
     ,ROUND(CAST(TotalTimeInBed / 60.0 AS FLOAT), 1) AS TotalHoursInBed
 FROM 
-	[Daily_Tables].[sleepDay_merged_Apr_May]
+	[Portfolio Projects].[Daily_Tables].[sleepDay_merged_Apr_May]
 ORDER BY 
 	Id
 	,TotalHoursAsleep
@@ -80,7 +80,7 @@ WITH RankedSleepData AS (
 		,TotalTimeInBed / 60.0 AS TotalHoursInBed
 		,PERCENT_RANK() OVER (ORDER BY TotalMinutesAsleep / 60.0) AS PercentRank -- Replicating the TRIMMEAN functionality usin percent rank
     FROM 
-        [Daily_Tables].[sleepDay_merged_Apr_May]
+        [Portfolio Projects].[Daily_Tables].[sleepDay_merged_Apr_May]
 )
 SELECT 
 	Id
@@ -114,7 +114,7 @@ WITH acte AS (
         Id,
         COUNT(Id) AS NoOfRecords
     FROM
-        Daily_Tables.dailyActivity_merged_Apr_May
+        [Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May]
     WHERE
         SedentaryMinutes <> 1440 -- Filter out records where the device was not worn (1440 minutes = 24 hours)
     GROUP BY 
@@ -139,7 +139,7 @@ FROM
 SELECT
     *
 FROM
-    Daily_Tables.dailyActivity_merged_Apr_May;
+    [Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May];
 
 -- Result: 32 out of 33 users utilize the Activity Tracker function.
 
@@ -160,7 +160,7 @@ FROM
 SELECT 
     Id
 FROM
-    [dbo].[heartrate_minutes_merged_Mar_Apr]
+    [Portfolio Projects].[dbo].[heartrate_minutes_merged_Mar_Apr]
 GROUP BY
     Id;
 
@@ -168,7 +168,7 @@ GROUP BY
 SELECT 
     Id
 FROM
-    [dbo].[heartrate_minutes_merged_Apr_May]
+    [Portfolio Projects].[dbo].[heartrate_minutes_merged_Apr_May]
 GROUP BY
     Id;
 
@@ -177,4 +177,4 @@ GROUP BY
 -- 7 out of 33 users used it in April - May.
 
 -- Conclusion:
--- The heart rate tracking function is not as popular as other more conventional functions.
+-- The heart rate tracking function is less popular than other more conventional functions.

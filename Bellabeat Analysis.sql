@@ -1,6 +1,6 @@
 -- Section: Tracking Daily Calories of Users --
 
--- This section aims to examine if the daily and hourly tables represent the same data.
+-- This section examines whether the daily and hourly tables represent the same data.
 -- We will convert the hourly data to daily data and compare it with the existing daily data.
 
 -- CTE to Convert Hourly Data to Daily Data
@@ -54,7 +54,7 @@ SELECT
 FROM 
 	[Portfolio Projects].[Daily_Tables].[sleepDay_merged_Apr_May]
 
--- Inspecting the data to see how to find any patterns, or inconsistencies
+-- Inspecting the data to see how to find any patterns or inconsistencies
 SELECT 
 	DISTINCT Id
     ,CAST(SleepDay AS DATE) AS SleepDate
@@ -98,36 +98,58 @@ HAVING
 ORDER BY 
 	TrimmedMeanTotalHoursAsleep
 
--- Only 16 out of 33 users track their sleep consistently, 7 have tried it and stopped. 
+-- Only 16 out of 35 users track their sleep consistently, 7 have tried it and stopped. 
 
 --------------------------------------------------------------------------------------------------------------
 
--- Section: Usage Analysis of Different Smart Device Functions
+-- Section: Usage Analysis of Activity tracking.
 
 -- This section focuses on the number of users that utilize different functions of the smart device.
 
--- Activity Tracking
+-- The code is repeated for the two time periods. It does the following.
 -- The following CTE counts the number of days each user actively used the activity tracking function.
+-- Display users who use the activity tracker consistently (more than 15 days per month)
 
-WITH acte AS (
+-- March to April
+WITH acte1 AS (
     SELECT
         Id,
         COUNT(Id) AS NoOfRecords
     FROM
-        [Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May]
+        [Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Mar_Apr]
     WHERE
         SedentaryMinutes <> 1440 -- Filter out records where the device was not worn (1440 minutes = 24 hours)
     GROUP BY 
         Id
 )
-
--- Display users who use the activity tracker consistently (more than 15 days)
 SELECT
     *
 FROM 
-    acte
+    acte1 
+ORDER BY 
+	NoOfRecords
+WHERE
+    NoOfRecords > 15; 
+
+-- April to May
+WITH acte2 AS (
+    SELECT
+        Id,
+        COUNT(Id) AS NoOfRecords
+    FROM
+        [Portfolio Projects].Daily_Tables.dailyActivity_merged_Apr_May
+    WHERE
+        SedentaryMinutes <> 1440 -- Filter out records where the device was not worn (1440 minutes = 24 hours)
+    GROUP BY 
+        Id
+)
+SELECT
+    *
+FROM 
+    acte2
 WHERE
     NoOfRecords > 15;
+
 
 -- Verify the total number of records from the CTE matches the table rows
 SELECT
@@ -136,15 +158,25 @@ FROM
     acte;
 
 -- Display all records from the daily activity table for comparison
-SELECT
-    *
-FROM
-    [Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May];
 
--- Result: 32 out of 33 users utilize the Activity Tracker function.
+SELECT
+    DISTINCT(Id)
+FROM
+	[Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Mar_Apr]
+
+SELECT
+    DISTINCT(Id)
+FROM
+	[Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May]
+
+-- Result: 
+-- 4 out of 35 users utilised the Activity Tracker function from March to April. However, ALL 35 tried it.
+-- 32 out of 35 users utilised the Activity Tracker function from April to May.
+
 
 -- Conclusion:
 -- The Activity Tracker is one of the main functionalities used by the majority of smart device users.
+-- The function might need some getting used to before users can stay consistent.
 -- This indicates its importance and frequent usage among the users.
 
 --------------------------------------------------------------------------------------------------------------
@@ -152,10 +184,8 @@ FROM
 -- Section: Usage Analysis of Heart Rate Tracking
 
 -- This section focuses on the number of users utilizing the heart rate tracking function.
-
--- Heart Rate Tracking Usage
-
 -- The below queries retrieve the number of unique users who used heart rate tracking.
+
 -- March to April
 SELECT 
     DISTINCT(Id)
@@ -169,8 +199,162 @@ FROM
     [Portfolio Projects].[dbo].[heartrate_minutes_merged_Apr_May]
 
 -- Result: 
--- 13 out of 33 users used the heart rate tracking function in March - April.
--- 7 out of 33 users used it in April - May.
+-- 13 out of 35 users used the heart rate tracking function in March - April.
+-- 7 out of 35 users used it in April - May.
 
 -- Conclusion:
 -- The heart rate tracking function is less popular than other more conventional functions.
+
+--------------------------------------------------------------------------------------------------------------
+
+-- Section: Usage and Analysis of Calorie Tracking.
+
+-- The code is repeated for the two time periods. It does the following.
+-- CTE to convert the hourly table to daily.
+-- Display users who use the calorie tracker consistently (more than 15 days per month)
+
+-- March to April
+WITH HtoDCTE1 AS (
+    SELECT
+        Id,
+        CAST(ActivityHour AS DATE) AS ActivityDateCTE,
+        SUM(Calories) AS ConvertedCalories
+    FROM 
+        [Portfolio Projects].[Hourly_Tables].[hourlyCalories_merged_Mar_Apr]
+    GROUP BY
+        Id,
+        CAST(ActivityHour AS DATE)
+)
+SELECT 
+	Id
+FROM 
+	HtoDCTE1
+GROUP BY
+	Id
+HAVING
+	COUNT(Id) > 15
+
+-- April to May
+WITH HtoDCTE2 AS (
+    SELECT
+        Id,
+        CAST(ActivityHour AS DATE) AS ActivityDateCTE,
+        SUM(Calories) AS ConvertedCalories
+    FROM 
+        [Portfolio Projects].[Hourly_Tables].[hourlyCalories_merged_Apr_May]
+    GROUP BY
+        Id,
+        CAST(ActivityHour AS DATE)
+)
+SELECT 
+	Id
+FROM 
+	HtoDCTE2
+GROUP BY
+	Id
+HAVING
+	COUNT(Id) > 15
+
+-- Result: 
+-- 33 out of 35 users used the heart rate tracking function in March - April.
+-- 32 out of 35 users used it in April - May.
+
+-- Conclusion:
+-- The majority of users also use calorie tracking. 
+-- It is possible that activity tracking covers other functions such as Calories, Steps, Distance and intensity. 
+
+--------------------------------------------------------------------------------------------------------------
+
+-- Section: Usage and Analysis of Weight and BMI Tracking.
+
+-- Research has shown that people weighting themselves more than once a week have more control over their weight long term.
+-- The code below shows individuals that use the Weight and BMI functionality 1 or more times a week. 
+
+
+-- March to April
+SELECT
+	Id
+	,COUNT(Id)
+FROM
+	[Portfolio Projects].[dbo].[weightLogInfo_merged_Mar_Apr]
+GROUP BY 
+	Id
+HAVING
+	COUNT(Id) >= 4
+
+-- April to May
+SELECT
+	Id
+	,COUNT(Id)
+FROM
+	[Portfolio Projects].[dbo].[weightLogInfo_merged_Apr_May]
+GROUP BY 
+	Id
+HAVING
+	COUNT(Id) >= 4
+
+-- Result: 
+-- 2 out of 35 utilised the Weight and BMI functionality consistently in March to April. 11 out of 35 tried it at least once.
+-- 3 out of 35 utilised the Weight and BMI functionality consistently in April to May. 8 out of 35 tried it at least once.
+-- One user logged all 30 days from April to May. Most of the users have 1-2 logs per month.
+
+-- Conclusion:
+-- Weight and BMI logging has a small userbase but there are some really consistent users that enjoy this feature.
+
+--------------------------------------------------------------------------------------------------------------
+	
+-- Section: Usage and Analysis of MET Tracking.
+
+-- The code below shows individuals that use the MET functionality regularly.
+-- A CTE will be used to convert the minute data to daily data. This will make filtering the results easier. 
+-- Users of MET with less than 15 days a month will be filtered out.
+
+-- March to April
+WITH dailymet1 AS (
+SELECT
+	Id
+	,CAST(ActivityMinute AS DATE) AS newdate
+FROM
+	[Portfolio Projects].[MinuteTables].[minuteMETsNarrow_merged_Mar_Apr]
+GROUP BY 
+	Id
+	,CAST(ActivityMinute AS DATE)
+)
+SELECT
+	Id
+FROM
+	dailymet1
+GROUP BY
+	Id
+HAVING 
+	COUNT(Id) > 15
+
+	
+-- April to May
+WITH dailymet2 AS (
+SELECT
+	Id
+	,CAST(ActivityMinute AS DATE) AS newdate
+FROM
+	[Portfolio Projects].[MinuteTables].[minuteMETsNarrow_merged_Mar_Apr]
+GROUP BY 
+	Id
+	,CAST(ActivityMinute AS DATE)
+)
+SELECT
+	Id
+FROM
+	dailymet2
+GROUP BY
+	Id
+HAVING 
+	COUNT(Id) > 15
+
+-- Result: 
+-- 24 out of 35 users utilise the MET function consistently. 
+-- An additional 2 have used it less frequently.
+
+-- Conclusion:
+-- The MET feature is one that is frequently used. Therefore it is worth investing resources to.
+
+/* ////////////////////////////////////////////////////////////////////////////////////////////// */

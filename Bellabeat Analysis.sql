@@ -1,4 +1,53 @@
--- Tracking the sleep of the users -- 
+-- Section: Tracking Daily Calories of Users --
+
+-- This section aims to examine if the daily and hourly tables represent the same data.
+-- We will convert the hourly data to daily data and compare it with the existing daily data.
+
+-- CTE to Convert Hourly Data to Daily Data
+WITH HtoDCTE AS (
+    SELECT
+        Id,
+        CAST(ActivityHour AS DATE) AS ActivityDateCTE,
+        SUM(Calories) AS ConvertedCalories
+    FROM 
+        [Portfolio Projects].[Hourly_Tables].[hourlyCalories_merged_Apr_May]
+    GROUP BY
+        Id,
+        CAST(ActivityHour AS DATE)
+)
+
+-- Join the Daily Table and the Converted Hourly Data to Identify Differences
+SELECT 
+    daily.Id,
+    daily.ActivityDay,
+    HtoDCTE.ActivityDateCTE,
+    daily.Calories,
+    HtoDCTE.ConvertedCalories
+FROM 
+    [Daily_Tables].[dailyCalories_merged_Apr_May] AS daily
+JOIN HtoDCTE ON
+    daily.Id = HtoDCTE.Id
+WHERE
+    daily.ActivityDay = HtoDCTE.ActivityDateCTE
+    AND (daily.Calories > HtoDCTE.ConvertedCalories + 300 OR daily.Calories < HtoDCTE.ConvertedCalories - 300) -- OPTIONAL: Filter to see outliers OR use AND NOT to filter them OUT
+
+-- Result: Daily and Hourly Data Comparison
+-- The comparison shows that the daily and hourly tables represent the same data.
+-- The hourly table is updated more frequently and has more consistent values.
+-- Therefore, the converted hourly data (HtoDCTE) will be used instead of the daily table for further analysis.
+
+-- Conclusion:
+-- The hourly table provides more granular and accurate data.
+-- For future analyses, we will rely on the hourly table converted to daily data as shown in HtoDCTE.
+
+/* ////////////////////////////////////////////////////////////////////////////////////////////// */
+
+-- Sections Below: Consistent Users of Each Function
+-- These sections identify users who consistently use specific functions of the smart device.
+-- Each section focuses on a different function and highlights users who have used the function regularly and correctly over the specified period.
+
+	
+-- Section: Tracking the sleep of the users -- 
 
 SELECT
 	*
@@ -51,51 +100,7 @@ ORDER BY
 
 -- Only 16 out of 33 users track their sleep consistently, 7 have tried it and stopped. 
 
-/* ////////////////////////////////////////////////////////////////////////////////////////////// */
-
--- Tracking Daily Calories of Users --
-
--- This section aims to examine if the daily and hourly tables represent the same data.
--- We will convert the hourly data to daily data and compare it with the existing daily data.
-
--- CTE to Convert Hourly Data to Daily Data
-WITH HtoDCTE AS (
-    SELECT
-        Id,
-        CAST(ActivityHour AS DATE) AS ActivityDateCTE,
-        SUM(Calories) AS ConvertedCalories
-    FROM 
-        [Portfolio Projects].[Hourly_Tables].[hourlyCalories_merged_Apr_May]
-    GROUP BY
-        Id,
-        CAST(ActivityHour AS DATE)
-)
-
--- Join the Daily Table and the Converted Hourly Data to Identify Differences
-SELECT 
-    daily.Id,
-    daily.ActivityDay,
-    HtoDCTE.ActivityDateCTE,
-    daily.Calories,
-    HtoDCTE.ConvertedCalories
-FROM 
-    [Daily_Tables].[dailyCalories_merged_Apr_May] AS daily
-JOIN HtoDCTE ON
-    daily.Id = HtoDCTE.Id
-WHERE
-    daily.ActivityDay = HtoDCTE.ActivityDateCTE
-    AND (daily.Calories > HtoDCTE.ConvertedCalories + 300 OR daily.Calories < HtoDCTE.ConvertedCalories - 300) -- OPTIONAL: Filter to see outliers OR use AND NOT to filter them OUT
-
--- Result: Daily and Hourly Data Comparison
--- The comparison shows that the daily and hourly tables represent the same data.
--- The hourly table is updated more frequently and has more consistent values.
--- Therefore, the converted hourly data (HtoDCTE) will be used instead of the daily table for further analysis.
-
--- Conclusion:
--- The hourly table provides more granular and accurate data.
--- For future analyses, we will rely on the hourly table converted to daily data as shown in HtoDCTE.
-
-/* ////////////////////////////////////////////////////////////////////////////////////////////// */
+--------------------------------------------------------------------------------------------------------------
 
 -- Section: Usage Analysis of Different Smart Device Functions
 

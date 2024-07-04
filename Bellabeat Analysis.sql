@@ -94,3 +94,82 @@ WHERE
 -- Conclusion:
 -- The hourly table provides more granular and accurate data.
 -- For future analyses, we will rely on the hourly table converted to daily data as shown in HtoDCTE.
+
+/* ////////////////////////////////////////////////////////////////////////////////////////////// */
+
+-- Section: Usage Analysis of Different Smart Device Functions
+
+-- This section focuses on the number of users that utilize different functions of the smart device.
+
+-- Activity Tracking
+-- The following CTE counts the number of days each user actively used the activity tracking function.
+
+WITH acte AS (
+    SELECT
+        Id,
+        COUNT(Id) AS NoOfRecords
+    FROM
+        Daily_Tables.dailyActivity_merged_Apr_May
+    WHERE
+        SedentaryMinutes <> 1440 -- Filter out records where the device was not worn (1440 minutes = 24 hours)
+    GROUP BY 
+        Id
+)
+
+-- Display users who use the activity tracker consistently (more than 10 days)
+SELECT
+    *
+FROM 
+    acte
+WHERE
+    NoOfRecords > 10;
+
+-- Verify the total number of records from the CTE matches the table rows
+SELECT
+    SUM(NoOfRecords) AS TotalRecords
+FROM 
+    acte;
+
+-- Display all records from the daily activity table for comparison
+SELECT
+    *
+FROM
+    Daily_Tables.dailyActivity_merged_Apr_May;
+
+-- Result: 32 out of 33 users utilize the Activity Tracker function.
+
+-- Conclusion:
+-- The Activity Tracker is one of the main functionalities used by the majority of smart device users.
+-- This indicates its importance and frequent usage among the users.
+
+--------------------------------------------------------------------------------------------------------------
+
+-- Section: Usage Analysis of Heart Rate Tracking
+
+-- This section focuses on the number of users utilizing the heart rate tracking function.
+
+-- Heart Rate Tracking Usage
+
+-- The below queries retrieve the number of unique users who used heart rate tracking.
+-- March to April
+SELECT 
+    Id
+FROM
+    [dbo].[heartrate_minutes_merged_Mar_Apr]
+GROUP BY
+    Id;
+
+-- April to May
+SELECT 
+    Id
+FROM
+    [dbo].[heartrate_minutes_merged_Apr_May]
+GROUP BY
+    Id;
+
+-- Result: 
+-- 13 out of 33 users used the heart rate tracking function in March - April.
+-- 7 out of 33 users used it in April - May.
+
+-- Conclusion:
+-- The heart rate tracking function is not as popular as other more conventional functions.

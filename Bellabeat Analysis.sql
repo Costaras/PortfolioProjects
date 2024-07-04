@@ -121,13 +121,13 @@ WITH acte AS (
         Id
 )
 
--- Display users who use the activity tracker consistently (more than 10 days)
+-- Display users who use the activity tracker consistently (more than 15 days)
 SELECT
     *
 FROM 
     acte
 WHERE
-    NoOfRecords > 10;
+    NoOfRecords > 15;
 
 -- Verify the total number of records from the CTE matches the table rows
 SELECT
@@ -158,19 +158,15 @@ FROM
 -- The below queries retrieve the number of unique users who used heart rate tracking.
 -- March to April
 SELECT 
-    Id
+    DISTINCT(Id)
 FROM
     [Portfolio Projects].[dbo].[heartrate_minutes_merged_Mar_Apr]
-GROUP BY
-    Id;
 
 -- April to May
 SELECT 
-    Id
+    DISTINCT(Id)
 FROM
     [Portfolio Projects].[dbo].[heartrate_minutes_merged_Apr_May]
-GROUP BY
-    Id;
 
 -- Result: 
 -- 13 out of 33 users used the heart rate tracking function in March - April.

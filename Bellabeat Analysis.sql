@@ -394,3 +394,121 @@ ORDER BY
 -- Conclusion:
 -- The activity of users is very mixed.
 -- Therefore, the needs of all activity groups should be considered when implementing features to the Leaf smart device.
+
+--------------------------------------------------------------------------------------------------------------
+
+-- Section: Relationships between sleep and calorie output.
+
+-- Exploring data to find the relationship (if any) between sleep and calorie output.
+
+WITH RankedSleepData AS ( 
+    SELECT 
+        Id
+		,SleepDay
+        ,TotalMinutesAsleep / 60.0 AS TotalHoursAsleep
+		,TotalTimeInBed / 60.0 AS TotalHoursInBed
+		,PERCENT_RANK() OVER (ORDER BY TotalMinutesAsleep / 60.0) AS PercentRank
+    FROM 
+        [Portfolio Projects].[Daily_Tables].[sleepDay_merged_Apr_May]
+)
+, avgcal AS (
+	SELECT
+		Id
+		,AVG(Calories) AS CalPerDay
+	FROM
+		[Portfolio Projects].[Daily_Tables].[dailyCalories_merged_Apr_May]
+	GROUP BY
+		Id
+)
+SELECT 
+	sleep.Id
+    ,ROUND(CAST(AVG(sleep.TotalHoursAsleep) AS FLOAT),1) AS TrimmedMeanTotalHoursAsleep
+	--,ROUND(CAST(AVG(sleep.TotalHoursInBed) AS FLOAT),1) AS TrimmedMeanTotalHoursInBed -- Remove comment for TotalHoursInBed to be included.
+	,CalPerDay
+FROM 
+	RankedSleepData AS sleep
+JOIN avgcal AS cal ON 
+	sleep.Id = cal.Id
+WHERE
+	PercentRank BETWEEN 0.005 AND 0.995  -- Exclude the top and bottom 0.5%
+GROUP BY
+	sleep.Id, CalPerDay
+HAVING
+	COUNT(sleep.Id) > 5
+ORDER BY
+	TrimmedMeanTotalHoursAsleep DESC
+
+-- Result:
+-- No significant link between hours of sleep and calorie output
+
+-- Conclusion:
+-- Explore other avenues to encourage use of the sleep feature.
+
+--------------------------------------------------------------------------------------------------------------
+
+-- Section: Relationships between sleep, activity and self-tracking consistency
+
+-- Comparing the activity and sleep of users.
+-- Additionally comparing their tracking behaviours between sleep and activity.
+
+WITH RankedSleepData AS (
+    SELECT 
+        Id,
+        SleepDay,
+        TotalMinutesAsleep / 60.0 AS TotalHoursAsleep,
+        TotalTimeInBed / 60.0 AS TotalHoursInBed,
+        PERCENT_RANK() OVER (ORDER BY TotalMinutesAsleep / 60.0) AS PercentRank
+    FROM 
+        [Portfolio Projects].[Daily_Tables].[sleepDay_merged_Apr_May]
+),
+AvgActivity AS (
+    SELECT 
+        Id,
+        ROUND(AVG(TotalSteps), 2) AS AvgTotalSteps,
+        ROUND(AVG(TotalDistance), 2) AS AvgTotalDistance,
+        (1440 - AVG(SedentaryMinutes)) AS AvgActiveMin,
+        AVG(FairlyActiveMinutes) AS AvgModActiveMin,
+        AVG(LightlyActiveMinutes) AS AvgLightActiveMin,
+        AVG(Calories) AS AvgCalories
+    FROM    
+        [Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May]
+    GROUP BY 
+        Id
+)
+SELECT 
+    act.Id,
+    AvgTotalSteps,
+    AvgTotalDistance,
+    AvgActiveMin,
+    AvgModActiveMin,
+    AvgLightActiveMin,
+    AvgCalories,
+    ROUND(CAST(AVG(sleep.TotalHoursAsleep) AS FLOAT), 1) AS TrimmedMeanTotalHoursAsleep,
+    COUNT(sleep.Id) AS SleepRecordCount -- To check the count of sleep records for each user
+    -- ,ROUND(CAST(AVG(sleep.TotalHoursInBed) AS FLOAT), 1) AS TrimmedMeanTotalHoursInBed
+FROM 
+    AvgActivity AS act
+LEFT JOIN RankedSleepData AS sleep ON 
+    act.Id = sleep.Id
+GROUP BY
+    act.Id,
+    AvgTotalSteps,
+    AvgTotalDistance,
+    AvgActiveMin,
+    AvgModActiveMin,
+    AvgLightActiveMin,
+    AvgCalories
+ORDER BY
+    AvgModActiveMin DESC,
+    AvgTotalSteps DESC,
+    AvgTotalDistance DESC,
+    TrimmedMeanTotalHoursAsleep DESC;
+
+-- Results:
+-- No significant relationship between sleep and activity from this data.
+-- However there is a correlation between sleep tracking consistency and activity throughout the day.
+
+-- Conclusion:
+-- The relationship between sleep tracking consistency and activity should be examined more in depth
+-- In addition to general tracking consistency and activity.
+-- Adding a feature to encourage consistent tracking should be considered.

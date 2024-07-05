@@ -358,3 +358,39 @@ HAVING
 -- The MET feature is one that is frequently used. Therefore it is worth investing resources to.
 
 /* ////////////////////////////////////////////////////////////////////////////////////////////// */
+
+-- Ranking Users by Activity Level
+-- This will show what how active the userbase is in order to cater to their needs.
+
+SELECT 
+	Id
+	,ROUND(AVG(TotalSteps), 2) AS AvgTotalSteps
+	,ROUND(AVG(TotalDistance), 2) AS AvgTotalDistance
+	,(1440 - AVG(SedentaryMinutes)) AS AvgActiveMin
+	,AVG(FairlyActiveMinutes) AS AvgModActiveMin -- 30 minutes of moderate exercise is advised for general fitness
+	,AVG(LightlyActiveMinutes) AS AvgLightActiveMin -- For reference 
+	,AVG(Calories) AS AvgCalories
+FROM	
+	[Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May]
+GROUP BY 
+	Id
+ORDER BY 
+	5 DESC
+	,4
+	,2
+	,3 
+-- Comment out the code below to filter for each activity group.
+--OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY -- Very Active Users: Top 5
+--OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY -- Moderately Active Users: Ranked 6 to 10
+--OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY -- Average Active Users: Ranked 11 to 20
+--OFFSET 20 ROWS FETCH NEXT 13 ROWS ONLY -- Sedentary Users: Ranked below 20
+
+-- Result: 
+-- Very Active: Top 5 users
+-- Moderately Active: Users ranked 6 to 10
+-- Average Active: Users ranked 11 to 20
+-- Sedentary: Users ranked below 20
+
+-- Conclusion:
+-- The activity of users is very mixed.
+-- Therefore, the needs of all activity groups should be considered when implementing features to the Leaf smart device.

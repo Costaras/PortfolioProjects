@@ -506,9 +506,8 @@ ORDER BY
 
 -- Results:
 -- No significant relationship between sleep and activity from this data.
--- However there is a correlation between sleep tracking consistency and activity throughout the day.
+-- However, sleep tracking consistency and activity throughout the day correlate.
 
 -- Conclusion:
--- The relationship between sleep tracking consistency and activity should be examined more in depth
--- In addition to general tracking consistency and activity.
+-- The relationship between sleep tracking consistency and activity should be examined more in-depth, in addition to general tracking consistency and activity.
 -- Adding a feature to encourage consistent tracking should be considered.

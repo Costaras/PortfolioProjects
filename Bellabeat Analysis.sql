@@ -256,7 +256,7 @@ HAVING
 	COUNT(Id) > 15
 
 -- Result: 
--- 33 out of 35 users used the heart rate tracking function in March - April.
+-- 33 out of 35 users used the Calorie tracking function in March - April.
 -- 32 out of 35 users used it in April - May.
 
 -- Conclusion:
@@ -397,6 +397,28 @@ ORDER BY
 
 --------------------------------------------------------------------------------------------------------------
 
+-- Section: Creating a table to unify all of the user engagement data for each month
+	
+CREATE TABLE UsersPerMonth (
+	Feature nvarchar(128),
+	users_in_March INT,
+	users_in_April INT,
+	)
+INSERT INTO UsersPerMonth
+VALUES
+	( 'Sleep',  0, 16),
+	( 'Activity', 4, 32),
+	( 'Heart rate', 13, 7),
+	( 'Calorie', 33, 32),
+	('BMI & Weight', 2, 3),
+	( 'MET', 24, 24) 
+
+SELECT 
+	*
+FROM UsersPerMonth
+
+--------------------------------------------------------------------------------------------------------------
+
 -- Section: Relationships between sleep and calorie output.
 
 -- Exploring data to find the relationship (if any) between sleep and calorie output.
@@ -511,3 +533,4 @@ ORDER BY
 -- Conclusion:
 -- The relationship between sleep tracking consistency and activity should be examined more in-depth, in addition to general tracking consistency and activity.
 -- Adding a feature to encourage consistent tracking should be considered.
+

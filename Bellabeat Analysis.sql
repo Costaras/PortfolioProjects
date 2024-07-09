@@ -520,7 +520,7 @@ SELECT
     ,ActRank
     ,ROUND(CAST(AVG(sleep.TotalHoursAsleep) AS FLOAT), 1) AS AvgHoursAsleep,
     COUNT(sleep.Id) AS SleepRecordCount -- To check the count of sleep records for each user
-    -- ,ROUND(CAST(AVG(sleep.TotalHoursInBed) AS FLOAT), 1) AS TrimmedMeanTotalHoursInBed
+    -- ,ROUND(CAST(AVG(sleep.TotalHoursInBed) AS FLOAT), 1) AS AvgHoursInBed
 FROM 
     ActivityRank AS act
 LEFT JOIN RankedSleepData AS sleep ON 

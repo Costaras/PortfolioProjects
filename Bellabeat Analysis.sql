@@ -486,45 +486,51 @@ WITH RankedSleepData AS (
 AvgActivity AS (
     SELECT 
         Id,
-        ROUND(AVG(TotalSteps), 2) AS AvgTotalSteps,
-        ROUND(AVG(TotalDistance), 2) AS AvgTotalDistance,
+        AVG(TotalSteps) AS AvgTotalSteps,
+        AVG(TotalDistance) AS AvgTotalDistance,
         (1440 - AVG(SedentaryMinutes)) AS AvgActiveMin,
-        AVG(FairlyActiveMinutes) AS AvgModActiveMin,
+        AVG(FairlyActiveMinutes + VeryActiveMinutes) AS AvgFullyActiveMin, -- Getting the Activity if it is Fairly active or above
         AVG(LightlyActiveMinutes) AS AvgLightActiveMin,
         AVG(Calories) AS AvgCalories
     FROM    
         [Portfolio Projects].[Daily_Tables].[dailyActivity_merged_Apr_May]
     GROUP BY 
         Id
+),
+ActivityRank AS (
+    SELECT 
+        RANK() OVER (
+            ORDER BY AvgFullyActiveMin DESC, AvgActiveMin DESC, AvgTotalDistance DESC, AvgTotalSteps DESC, AvgCalories DESC
+        ) AS ActRank,
+        Id,
+        AvgTotalSteps,
+        AvgTotalDistance,
+        AvgActiveMin,
+        AvgFullyActiveMin,
+        AvgLightActiveMin,
+        AvgCalories
+    FROM
+        AvgActivity
 )
+
+-- Table below shows the activity rank of users compared to their hours of sleep
+-- Also shows the number of times each user records their sleep
 SELECT 
-    act.Id,
-    AvgTotalSteps,
-    AvgTotalDistance,
-    AvgActiveMin,
-    AvgModActiveMin,
-    AvgLightActiveMin,
-    AvgCalories,
-    ROUND(CAST(AVG(sleep.TotalHoursAsleep) AS FLOAT), 1) AS TrimmedMeanTotalHoursAsleep,
+    act.Id
+    ,ActRank
+    ,ROUND(CAST(AVG(sleep.TotalHoursAsleep) AS FLOAT), 1) AS AvgHoursAsleep,
     COUNT(sleep.Id) AS SleepRecordCount -- To check the count of sleep records for each user
     -- ,ROUND(CAST(AVG(sleep.TotalHoursInBed) AS FLOAT), 1) AS TrimmedMeanTotalHoursInBed
 FROM 
-    AvgActivity AS act
+    ActivityRank AS act
 LEFT JOIN RankedSleepData AS sleep ON 
     act.Id = sleep.Id
 GROUP BY
-    act.Id,
-    AvgTotalSteps,
-    AvgTotalDistance,
-    AvgActiveMin,
-    AvgModActiveMin,
-    AvgLightActiveMin,
-    AvgCalories
+    act.Id
+	,ActRank
 ORDER BY
-    AvgModActiveMin DESC,
-    AvgTotalSteps DESC,
-    AvgTotalDistance DESC,
-    TrimmedMeanTotalHoursAsleep DESC;
+    ActRank ASC
+	,AvgHoursAsleep DESC;
 
 -- Results:
 -- No significant relationship between sleep and activity from this data.

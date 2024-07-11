@@ -1,0 +1,99 @@
+---
+title: "VStudio_dynamic_import_debugging_process"
+author: "Konstantinos Valourdos"
+date: "2024-06-22"
+output: html_document
+---
+
+## 1. Error Identification
+
+**Initial Error**: There is already an object named 'dailyActivity_merged_Apr_May' in the database.
+
+**Source**: Table already exists in the database.
+
+## 2. Script Adjustment
+
+Added a check to drop the table if it already exists before creating a new one.
+
+**Modification**:
+
+```{sql}
+IF OBJECT_ID('[dailyActivity_merged_Apr_May]', 'U') IS NOT NULL DROP TABLE [dailyActivity_merged_Apr_May];
+CREATE TABLE [dailyActivity_merged_Apr_May] (...);
+```
+
+**New Error emerged**: The OLE DB Destination failed validation due to no input columns
+
+This error persisted after multiple different reconfigurations using delayed validation. 
+
+### Step 3: Decision to Consolidate Tasks
+
+## 3. Decision to Consolidate Tasks
+
+Decided to perform all operations within the Script Task, avoiding separate Execute SQL Task and Data Flow Task in the Foreach Loop Container. This streamlined error handling and improved performance.
+
+## 4. Next Error Identification
+
+**Error**: Incorrect syntax near ','.
+
+**Source**: Extra trailing commas in CSV files.
+
+## 5. Script Adjustment
+
+Modified the script to trim trailing commas.
+
+**Modification**:
+
+```{csharp}
+columns = parser.ReadFields();
+columns = columns.Where(col => !string.IsNullOrWhiteSpace(col)).ToArray();
+```
+
+## 6. Next Error Identification
+
+**Error**: There are fewer columns in the INSERT statement than values specified in the VALUES clause.
+
+**Source**: Mismatch between columns and values due to CSV formatting issues.
+
+## 7. Script Enhancement
+
+Implemented a function to dynamically create tables based on CSV file headers. Ensured column names are stripped of any extraneous characters.
+
+**Modification**:
+
+```{csharp}
+foreach (string column in columns)
+{
+    createTableSQL += $"[{column}] NVARCHAR(MAX),";
+}
+createTableSQL = createTableSQL.TrimEnd(',') + ");";
+```
+
+## 8. Performance Optimization
+
+Identified potential performance bottleneck due to large file sizes and multiple inserts. Suggested batch processing and bulk insert methods to improve performance.
+
+**Modification**:
+
+```{csharp}
+private void InsertBatch(SqlConnection conn, DataTable dataTable, string tableName)
+{
+    using (SqlTransaction transaction = conn.BeginTransaction())
+    {
+        try
+        {
+            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.Default, transaction))
+            {
+                bulkCopy.DestinationTableName = tableName;
+                bulkCopy.WriteToServer(dataTable);
+            }
+            transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            transaction.Rollback();
+            Dts.Events.FireError(0, "Script Task", $"Error during bulk copy: {ex.Message}", string.Empty, 0);
+        }
+    }
+}
+```

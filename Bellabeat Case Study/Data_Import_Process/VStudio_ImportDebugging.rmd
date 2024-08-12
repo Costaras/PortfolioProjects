@@ -69,6 +69,8 @@ foreach (string column in columns)
 createTableSQL = createTableSQL.TrimEnd(',') + ");";
 ```
 
+In hindsight since column names can only have up to 126 characters NVARCHAR(126) should hvae been used instead of NVARCHAR(MAX).
+
 ## 8. Performance Optimization
 
 Identified potential performance bottleneck due to large file sizes and multiple inserts. Suggested batch processing and bulk insert methods to improve performance.

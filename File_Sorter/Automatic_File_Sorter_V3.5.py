@@ -10,11 +10,8 @@
 # <ins>Checks</ins> for errors:
 # 
 # - If *files* and *folders* created already exist in the directories. 
-#     
-# <ins>Does not</ins> check for:
-# 
-# - Permission errors.
-# - Files being used by another process.
+# - Permission errors.   
+# - *Files* being used by another process.
 
 # In[39]:
 

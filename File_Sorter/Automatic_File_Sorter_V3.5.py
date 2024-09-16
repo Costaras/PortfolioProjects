@@ -1,59 +1,27 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Automatic File Sorter
-# 
-# 
+"""
+Automatic File Sorter
 
-# This is automatic file sorter moves files from one directory to the prefered destination.
-# 
-# <ins>Checks</ins> for errors:
-# 
-# - If *files* and *folders* created already exist in the directories. 
-# - Permission errors.    
-# - *Files* being used by another process.
+This script moves files from the specified source directory to defined destination folders
+based on file extensions. It handles error checks for existing files, permission issues,
+and files being used by another process.
+"""
 
-# In[39]:
+import os
+import shutil
+import logging
+import time
 
-
-import os, shutil, logging, time
-
-
-# In[41]:
-
-
-path = r"C:/Users/conva/Downloads/"
-
-
-# ### Set up logging
-
-# In[44]:
-
-
+# Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-# ### Destination paths
-
-# In[47]:
-
-
-downloads_path = r"C:\Users\conva\Downloads" 
-
-
-# In[49]:
-
-
+# Paths
+downloads_path = r"C:\Users\conva\Downloads"
 destination_path = os.path.expanduser("~/Documents/_SortedFiles")
 
-
-# ### Defining folders
-# 
-# Can be edited to *add* or *remove* files
-
-# In[52]:
-
-
+# File type folders
 folders = {
     'Images': ('.png', '.jpg', '.jpeg'),
     'Videos': ('.mp4', '.mov', '.avi'),
@@ -65,56 +33,30 @@ folders = {
     'Scripts': ('.py', '.sh', '.bat', '.ps1', '.js', '.rb', '.php')
 }
 
-
-# ### Creating the folders
-
-# Only if they don't exist
-
-# In[56]:
-
-
+# Create destination folders if they don't exist
 for folder in folders:
     folder_path = os.path.join(destination_path, folder)
     try:
-        os.makedirs(folder_path, exist_ok=True)  # Create folders if they do not exist
+        os.makedirs(folder_path, exist_ok=True)
         logging.info(f"Ensured existence of directory: {folder_path}")
     except Exception as e:
         logging.error(f"Error creating directory {folder_path}: {e}")
 
-
-# #### List of files in the directory
-
-# In[59]:
-
-
+# List files in the source directory
 file_names = os.listdir(downloads_path)
-
-
-# ### Transferring files
-
-# Only if they are not already in the folder
-
-# In[37]:
-
-
-# Initialize count of moved files
 files_moved = 0
 
-
-# In[61]:
-
-
-# Transferring files
+# Move files to appropriate folders
 for file in file_names:
     source = os.path.join(downloads_path, file)
     
-    # Skip directories (folders)
+    # Skip directories
     if os.path.isdir(source):
         continue
     
     for folder, extensions in folders.items():
         if file.lower().endswith(extensions):
-            destination = os.path.join(destination_path, folder, file) 
+            destination = os.path.join(destination_path, folder, file)
             
             # Attempt to move the file with retries
             max_retries = 3
@@ -128,21 +70,15 @@ for file in file_names:
                         files_moved += 1
                     else:
                         logging.warning(f"File already exists: {destination}. Skipping.")
-                    break  # Exit the loop if successful
+                    break
                 except PermissionError as e:
                     retry_count += 1
-                    logging.error(f"Permission error moving file {file} to {folder}: {e}. File might be in use. Retrying {retry_count}/{max_retries}.")
-                    time.sleep(60)  # Wait 1 minute before retrying
+                    logging.error(f"Permission error moving {file} to {folder}: {e}. Retrying {retry_count}/{max_retries}.")
+                    time.sleep(60)  # Wait before retrying
                 except Exception as e:
-                    logging.error(f"Error moving file {file} to {folder}: {e}")
-                    break  # Exit on other exceptions
-            break  # Stop checking other folders once a match is found
+                    logging.error(f"Error moving {file} to {folder}: {e}")
+                    break
+            break
 
-
-# ### Summary of operations
-
-# In[64]:
-
-
+# Summary of operations
 logging.info(f"Total files moved: {files_moved}")
-

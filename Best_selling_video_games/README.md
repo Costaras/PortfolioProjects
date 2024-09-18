@@ -1,3 +1,4 @@
+
 # Best-Selling Video Games Data Preparation
 
 ## Project Overview
@@ -34,16 +35,38 @@ During this project, the following steps were completed:
 ## How to Run the Project
 
 1. Clone the repository:
-```bash
+   ```bash
    git clone https://github.com/Costaras/PortfolioProjects.git
    cd PortfolioProjects/Best_selling_video_games/
-```
+   ```
+
 2. Install the required dependencies:
-```bash
+   ```bash
    pip install -r requirements.txt
-```
+   ```
+
 3. Run the scraper script:
- ```bash  
+   ```bash
    python scripts/scraper.py
+   ```
+
+4. The cleaned data will be saved as `best_selling_video_games.csv` in the `data/` folder.
+
+## Project Structure
+
+```
+Best_selling_video_games/
+├── data
+│   └── best_selling_video_games.csv   # Cleaned data for analysis
+├── notebooks
+│   └── data_preparation_walkthrough.ipynb  # Jupyter notebook walkthrough
+├── scripts
+│   └── scraper.py                     # Web scraping script
+├── README.md                          # Project overview and instructions
+├── requirements.txt                   # List of required dependencies
 ```
 
+## Future Work
+
+- Perform detailed data analysis (e.g., trends, publisher performance, platform-specific insights).
+- Visualize sales distribution across platforms and publishers.

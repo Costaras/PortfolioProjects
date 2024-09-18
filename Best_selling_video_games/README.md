@@ -34,7 +34,16 @@ During this project, the following steps were completed:
 ## How to Run the Project
 
 1. Clone the repository:
-   ```bash
+```bash
    git clone https://github.com/Costaras/PortfolioProjects.git
    cd PortfolioProjects/Best_selling_video_games/
+```
+2. Install the required dependencies:
+```bash
+   pip install -r requirements.txt
+```
+3. Run the scraper script:
+ ```bash  
+   python scripts/scraper.py
+```
 

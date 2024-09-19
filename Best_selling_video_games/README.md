@@ -63,9 +63,14 @@ Best_selling_video_games/
 ├── scripts
 │   └── scraper.py                     # Web scraping script
 ├── README.md                          # Project overview and instructions
-├── requirements.txt                   # List of required dependencies
 ```
-
+Requirements
+```bash
+BeautifulSoup #from bs4
+requests
+pandas
+re
+```
 ## Future Work
 
 - Perform detailed data analysis (e.g., trends, publisher performance, platform-specific insights).

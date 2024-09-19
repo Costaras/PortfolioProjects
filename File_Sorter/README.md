@@ -68,9 +68,13 @@ File_Sorter/
 ├── scripts
 │   └── Automatic_File_Sorter_V3.6.py  # File sorting script
 ├── README.md                          # Project overview and instructions
-├── requirements.txt                   # List of required dependencies
 ```
-
+Requirements
+```bash
+shutil
+logging
+time
+```
 ## Future Work
 - Extend the script to include custom folder categories based on user preferences.
 - Implement a feature to track duplicate files and handle them intelligently (e.g., rename or skip).

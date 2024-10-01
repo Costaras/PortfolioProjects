@@ -1,5 +1,5 @@
 # Automated File Organizer Script
-##Project Overview
+## Project Overview
 This Python script is designed to automate the process of organizing downloaded files from the user's "Downloads" folder into categorized directories based on file types. The script moves files such as images, videos, documents, and others into designated folders for better file management and organization.
 
 ## Problem Statement

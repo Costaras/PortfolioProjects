@@ -66,7 +66,9 @@ File_Sorter/
 ├── notebooks
 │   └── File_Sorter_walkthrough.ipynb  # Jupyter notebook walkthrough
 ├── scripts
-│   └── Automatic_File_Sorter_V3.6.py  # File sorting script
+│   └── Automatic_File_Sorter_V4.0.py  # Most up-to-date file sorting script
+│   └── Automatic_File_Sorter_V3.7.py  # Previous file sorter itterations 
+│   └── Automatic_File_Sorter_V3.6.py 
 ├── README.md                          # Project overview and instructions
 ```
 Requirements

@@ -6,7 +6,7 @@ This Python script is designed to automate the process of organizing downloaded 
 The goal of this project is to:
 
 1.Organize downloaded files by automatically moving them to specific folders based on their file types (e.g., images, videos, documents).
-2.Ensure that directories are created dynamically if they do not exist.
+2.Ensure that directories are created dynamically if they do not exist.  
 3.Handle potential errors, such as permission issues, by implementing retries.
 
 ## Walkthrough & Thought Process

@@ -6,6 +6,10 @@
 
 import os, shutil, logging, time
 
+# Set up paths
+downloads_path = r"C:\Users\conva\Downloads"
+destination_path = os.path.expanduser("~/Documents/_SortedFiles")
+
 # Set up logging to both file and console
 log_file = os.path.join(destination_path, "file_sorter.log")  # Define log file path
 
